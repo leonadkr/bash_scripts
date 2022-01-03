@@ -42,10 +42,14 @@ move_cursor_to_begin()
 cpu_temp_prepare()
 {
 	local sys_class_hwmon="/sys/class/hwmon"
-	SYS_CLASS_HWMON_HWMON0="$sys_class_hwmon/hwmon0"
-
 	[ ! -d "$sys_class_hwmon" ] && CPU_TEMP_ERROR="No directory $sys_class_hwmon" && return
-	[ ! -d "$SYS_CLASS_HWMON_HWMON0" ] && CPU_TEMP_ERROR="No directory $SYS_CLASS_HWMON_HWMON0" && return
+
+	for hwmon in $sys_class_hwmon/hwmon*
+	do
+		[ ! -d "$hwmon" ] && CPU_TEMP_ERROR="No directory $hwmon" && return
+		[ "$(<$hwmon/name)" == "coretemp" ] && SYS_CLASS_HWMON_HWMON_CORETEMP=$hwmon && return
+	done
+	CPU_TEMP_ERROR="No coretemps in $sys_class_hwmon" && return
 }
 
 cpu_temp_print()
@@ -57,7 +61,7 @@ cpu_temp_print()
 
 	if [ -z "$CPU_TEMP_ERROR" ]
 	then
-		for cpu_sensor_label_file in $SYS_CLASS_HWMON_HWMON0/temp*_label
+		for cpu_sensor_label_file in $SYS_CLASS_HWMON_HWMON_CORETEMP/temp*_label
 		do
 			cpu_sensor_temp_file="${cpu_sensor_label_file/_label/_input}"
 
