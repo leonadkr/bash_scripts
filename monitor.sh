@@ -18,7 +18,7 @@ printf_and_count_lines()
 	local text_len=${#text}
 
 	$TPUT el
-	printf "$text\n"
+	printf "${text//\%/%%}\n"
 
 	OUTPUT_LINE_COUNT=$(( $OUTPUT_LINE_COUNT + $text_len / ( $term_cols + 1 ) + 1 ))
 }
@@ -99,6 +99,34 @@ nvidia_gpu_temp_print()
 
 
 #
+#	battery capacity
+#
+battery_cappacity_prepare()
+{
+	local sys_class_power_supply="/sys/class/power_supply"
+	[ ! -d "$sys_class_power_supply" ] && BATTERY_CAPACITY_ERROR="No directory $sys_class_power_supply" && return
+
+	for battery in $sys_class_power_supply/BAT*
+	do
+		[ ! -d "$battery" ] && BATTERY_CAPACITY_ERROR="No directory $battery" && return
+		SYS_CLASS_POWER_SUPPLY_BATTERY="$battery"
+	done
+}
+
+battery_cappacity_print()
+{
+	if [ -z "$BATTERY_CAPACITY_ERROR" ]
+	then
+		local batter_capacity="$(<$SYS_CLASS_POWER_SUPPLY_BATTERY/capacity)"
+		local battery_status="$(<$SYS_CLASS_POWER_SUPPLY_BATTERY/status)"
+		printf_and_count_lines "Battery: capacity %s%%, status %s" "$batter_capacity" "$battery_status"
+	else
+		printf_and_count_lines "Battery: %s" "$BATTERY_CAPACITY_ERROR"
+	fi
+}
+
+
+#
 #	net traffic speed
 #
 net_traffic_speed_prepare()
@@ -156,6 +184,7 @@ net_traffic_speed_print()
 #
 cpu_temp_prepare
 nvidia_gpu_temp_prepare
+battery_cappacity_prepare
 net_traffic_speed_prepare
 
 printf "Press q to quit\n"
@@ -165,6 +194,7 @@ do
 
 	cpu_temp_print
 	nvidia_gpu_temp_print
+	battery_cappacity_print
 	net_traffic_speed_print
 
 	read -s -t 1 -n 1 INPUTCHAR
