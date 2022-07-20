@@ -1,0 +1,10 @@
+Some scripts for bash.
+
+monitor.sh
+shows temperature for CPU and GPU (only for nvidia proprietary drivers), battery capacity and traffic speed per interfaces.
+monitor.sh mostly scans /sys, but for GPU nvidia-smi is used.
+
+fontpreview.sh
+creates HTML file representing font family, path to font file and a sample text. It can use all fonts attended by fontconfig.
+You need fontconfig intalled in your system.
+Try fontpreview.sh -h to see how it's used.
